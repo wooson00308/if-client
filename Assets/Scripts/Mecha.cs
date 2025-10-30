@@ -26,7 +26,12 @@ namespace IF
             { WeaponSlotType.R_Shoulder, null },
         };
 
-        private readonly List<IAssembly> abilities = new();
+        private readonly Dictionary<AbilitySlotType, IAssembly> abilities = new()
+        {
+            { AbilitySlotType.Primary, null },
+            { AbilitySlotType.Secondary, null },
+            { AbilitySlotType.Support, null },
+        };
 
         private readonly List<StatModifier> modifiers = new();
 
@@ -73,13 +78,16 @@ namespace IF
             void AccumulateAllFrom(IEnumerable<IAssembly> parts)
             {
                 foreach (var part in parts)
+                {
+                    if (part == null) continue;
                     foreach (var s in part.Stats)
                         Accumulate(s);
+                }
             }
 
             AccumulateAllFrom(frames.Values);
             AccumulateAllFrom(weapons.Values);
-            AccumulateAllFrom(abilities);
+            AccumulateAllFrom(abilities.Values);
 
             return map;
         }
@@ -223,6 +231,39 @@ namespace IF
                 ClampCurrentValuesToMax();
                 return existing;
             }
+            return null;
+        }
+
+        public Ability EquipAbility(Ability newAbility)
+        {
+            if (newAbility == null || !newAbility.Slot.HasValue) return null;
+
+            var slot = newAbility.Slot.Value;
+            Ability replaced = null;
+
+            if (abilities.TryGetValue(slot, out var existing) && existing != null)
+            {
+                replaced = existing as Ability;
+                OnAssemblyUnequipped(existing);
+            }
+
+            abilities[slot] = newAbility;
+            OnAssemblyEquipped(newAbility);
+            ClampCurrentValuesToMax();
+
+            return replaced;
+        }
+
+        public Ability UnequipAbility(AbilitySlotType slot)
+        {
+            if (abilities.TryGetValue(slot, out var existing) && existing != null)
+            {
+                abilities[slot] = null;
+                OnAssemblyUnequipped(existing);
+                ClampCurrentValuesToMax();
+                return existing as Ability;
+            }
+
             return null;
         }
 
