@@ -6,7 +6,7 @@ namespace IF.Assembly
     public class Weapon : IAssembly
     {
         public string Id { get; }
-        public AssemblyType Type => AssemblyType.Frame;
+        public AssemblyType Type => AssemblyType.Weapon;
         public WeaponSlotType Slot { get; }
         public IEnumerable<IStat> Stats { get; }
 
